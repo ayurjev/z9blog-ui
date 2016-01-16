@@ -1,0 +1,17 @@
+z9blog-ui:
+  image: z9blog-ui
+  links:
+   - z9img
+  ports:
+   - 8080:8080
+z9img:
+  image: z9img
+z9s3:
+  image: z9s3
+  environment:
+   - AWS_ACCESS_KEY_ID=#
+   - AWS_SECRET_ACCESS_KEY=#
+   - AWS_DEFAULT_REGION=eu-central-1
+   - S3BUCKET=mydockertest
+   - S3CONTENTTYPE=image/jpeg
+   - S3BUCKETURL=https://s3.eu-central-1.amazonaws.com/mydockertest/

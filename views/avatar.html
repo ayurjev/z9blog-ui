@@ -1,0 +1,92 @@
+<div class="avatar avatar-container ui-container" data-template-name="avatar">
+    <if>
+        <condition><var filter="length">url</var> > 0</condition>
+        <true>
+            <img alt="image" class="avatar-preview img-responsive" src="<var filter='html'>url</var>">
+        </true>
+        <false>
+            <img alt="image" class="avatar-preview img-responsive" src="http://dummyimage.com/600x400/e6e6e6/383838.png&text=Место+для+картинки">
+        </false>
+    </if>
+    <div class="avatar-actions">
+        <a class="avatar-choose-file-link" href="#"><i class="fa fa-edit"></i>&nbsp;Загрузить фото</a>
+        <input class="avatar-file hidden" type="file">
+    </div>
+</div>
+
+
+<style>
+    .avatar-container { position: relative; float: left; z-index: 9; }
+    .avatar-container img { width: 100%; max-width: 400px; min-width: 200px; }
+    .avatar-container .avatar-actions { display: none; position: absolute; bottom: 0; width: 100%; background-color: #333; opacity: 0.5; color: white; padding: 2px 4px; z-index: 1000; }
+    .avatar-container .avatar-actions a { color: white; }
+    .avatar-container:hover .avatar-actions { display: block !important; }
+</style>
+
+
+<script>
+    (function(internal) {
+        internal.ui.avatar_choose_file_link = ".avatar-choose-file-link";
+        internal.ui.avatar_preview = ".avatar-preview";
+        internal.ui.avatar_file = ".avatar-file";
+
+        internal.jcrop = null;
+
+        internal.init_jcrop = function() {
+            if (internal.jcrop) internal.jcrop.destroy();
+            $(internal.ui.avatar_preview, internal.self).Jcrop({
+                aspectRatio: 16/9,
+                onSelect: function(coords) {
+                    suit.ajax(
+                        "/api/crop/",
+                        {
+                            "img": $(internal.ui.avatar_preview, internal.self).attr("src").split("base64,").pop(),
+                            "coords": coords,
+                            "from_size": {
+                                "w": $(internal.ui.avatar_preview, internal.self).width(),
+                                "h": $(internal.ui.avatar_preview, internal.self).height()
+                            }
+                        },
+                        function(data) {
+                            if (data.result) {
+                                $(internal.ui.avatar_preview, internal.self).attr(
+                                    "src", "data:image/jpeg;base64," + data.result
+                                );
+                                $(internal.ui.avatar_file).val("");
+                                if (internal.jcrop) {
+                                    internal.jcrop.release();
+                                    internal.jcrop.destroy();
+                                    internal.jcrop = null;
+                                }
+                            }
+                        }
+                    );
+                }
+            }, function() { internal.jcrop = this; }
+            );
+        };
+
+        internal.api.createListeners = function() {
+
+            internal.connect(internal.ui.avatar_file, "change", function() {
+                if (this.files && this.files[0]) {
+                    var fr = new FileReader();
+                    fr.onloadend = function() {
+                        $(internal.ui.avatar_preview, internal.self).attr("src", fr.result);
+                        internal.init_jcrop();
+                        internal.events_controller.broadcast("AvatarChanged", {"src": fr.result});
+                    };
+                    fr.readAsDataURL(this.files[0]);
+                }
+            });
+
+            internal.connect(internal.ui.avatar_choose_file_link, "click", function() {
+                $(internal.ui.avatar_file, internal.self).click();
+            });
+
+        };
+
+        internal.api.on = internal.events_controller.on;
+
+    })
+</script>

@@ -1,0 +1,89 @@
+<div id="editor" class="padding ui-container" data-template-name="editor">
+    <div class="container">
+        <div class="row">
+
+            <div id="sidebar" class="col-md-4">
+                <breakpoint include="avatar"></breakpoint>
+                <div class="clearfix"></div>
+
+                <div class="categories categories-container ui-container" data-template-name="categories">
+                    <ul>
+                        <list for="category" in="categories">
+                            <li>
+                                <div class="checkbox">
+                                    <label>
+                                        <input class="category-checkbox" type="checkbox" data-category-id="<var>category.id</var>"/>
+                                        <var>category.name</var>
+                                    </label>
+                                </div>
+                            </li>
+                        </list>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div id="content" class="site-content blog-details col-md-8">
+                <div class="form-group">
+                    <input type="text" class="form-control" autocomplete="off" placeholder="Заголовок">
+                </div>
+                <div class="form-group tags_container" data-template-name="tags">
+                    <input class="tags-input" type="text" value="" data-role="tagsinput" placeholder="Ключевые слова"/>
+                </div>
+                <div id="summernote">Hello Summernote</div>
+
+                <hr />
+                <button id="save_btn" class="btn btn-primary">Сохранить</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .categories ul { display: block; }
+    .categories ul li { border-bottom: 1px dotted #C9C7C7; color: #575757; }
+</style>
+
+<script>
+    (function (internal) {
+
+        internal.ui.title_input = ".title-input";
+        internal.ui.img_element = ".avatar-preview";
+        internal.ui.tags_input = ".tags-input";
+        internal.ui.categories = ".category-checkbox";
+        internal.ui.summernote = "#summernote";
+
+        internal.ui.save_btn = "#save_btn";
+
+        internal.api.createListeners = function() {
+
+            $(internal.ui.tags_input, internal.self).tagsinput();
+
+            $(internal.ui.summernote).summernote({
+                height: 450,
+                placeholder: 'Пишите здесь...'
+            });
+
+            internal.connect(internal.ui.save_btn, "click", function() {
+                console.dir(internal.post_data());
+            });
+        };
+
+        internal.post_data = function() {
+            return {
+                "title": $(internal.ui.title_input, internal.self).val(),
+                "img": $(internal.ui.img_element).attr("src"),
+                "tags": $(internal.ui.tags_input).tagsinput('items'),
+                "body": $(internal.ui.summernote).summernote('code'),
+                "categories": function() {
+                    var categories = [];
+                    $.each($(internal.ui.categories+":checked"), function(num, category) {
+                        categories.push($(category).attr("data-category-id"));
+                    });
+                    return categories;
+                }()
+            }
+        };
+    })
+</script>
